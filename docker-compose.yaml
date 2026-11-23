@@ -1,0 +1,38 @@
+services:
+
+  dbserver:
+    image: postgres:17.11-alpine
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    ports:
+      - "5432:5432"
+
+  mailserver:
+    image: ghusta/fakesmtp
+    ports:
+      - "2525:25"
+
+  webserver:
+    build:
+      context: .
+      args:
+        - WILDFLY_ADMIN_USER
+        - WILDFLY_ADMIN_PASSWORD
+        - POSTGRES_DRIVER_VERSION=42.7.13
+    environment:
+      - POSTGRES_DB
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_HOST=dbserver
+      - POSTGRES_PORT=5432
+
+      - DATASOURCE_NAME
+      - DATASOURCE_JNDI
+    depends_on:
+      - dbserver
+      - mailserver
+    ports:
+      - "8080:8080"
+      - "9990:9990"
